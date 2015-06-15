@@ -6,11 +6,12 @@ public class Bitt {
 	private String headline;
 	private String authorName;
 	private ArrayList<Fact> facts = new ArrayList<>();
-	
-	public Bitt() {
-		
-	}
+	private int id;
 
+	public Bitt(int id) {
+		this.id = id;
+	}
+	
 	public String getHeadline() {
 		return headline;
 	}
@@ -33,6 +34,14 @@ public class Bitt {
 
 	public Fact getFact(int index) {
 		return facts.get(index);
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 	
 	

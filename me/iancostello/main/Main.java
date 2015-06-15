@@ -7,43 +7,75 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import me.iancostello.util.ByteBuffer;
 
 public class Main {
+	
+	private HashMap<String, BittCategory> bittCats = new HashMap();
+	
 	public static void main(String[] args) {
+		Main main = new Main();
+		main.run();
+	}
+	
+	public void run() {
 		/** Init */
-		ArrayList<Integer> topIdsString = new ArrayList<>();
-		ArrayList<Bitt> bitts = new ArrayList<>();
 		ByteBuffer topIds = new ByteBuffer();
+		long initTime = System.currentTimeMillis();
+		ArrayList<BittCategory> categoryByIndex = new ArrayList();
+		
+		/** Get Catagories*/
+		try {
+			ByteBuffer toRead = new ByteBuffer();
+			toRead.readURL(new URL("http://www.infobitt.com/api/category/?count=0&format=json"));
+			JSONArray categories = new JSONArray(toRead.toString());
+			for (int i = 0; i < categories.length(); i+=1) {
+				JSONObject cat = categories.getJSONObject(i);
+				BittCategory temp = new BittCategory();
+				String slug = cat.getString("slug");
+				temp.setSlug(slug);
+				temp.setTitle(cat.getString("name"));
+				bittCats.put(slug, temp);
+				categoryByIndex.add(temp);
+			}
+		} catch (IOException | JSONException e) {
+			e.printStackTrace();
+		}
+		
+		/** Build String To Get All Ids */
+		String categoryUrl = "http://www.infobitt.com/api/v2/top-multi/?";
+		for (int i = 0; i < categoryByIndex.size(); i+=1) {
+			categoryUrl += "categories=" + categoryByIndex.get(i).getSlug() + '&';
+		}
+		
 		JSONObject data = null;
 		
 		/** Get Bitt Ids */
 		try {
-			topIds.readURL(new URL("http://www.infobitt.com/api/v2/top-multi/?categories=top"));
-			//http://www.infobitt.com/api/top-edition/?count=5
-			//http://www.infobitt.com/api/bitt/?count=4&order_by=-last_activity&format=json
+			topIds.readURL(new URL(categoryUrl));
 			data = new JSONObject(topIds.toString());
 		} catch (IOException | JSONException e) {
 			e.printStackTrace();
 		}
 		
-		/** Parse The Ids*/
-		try {
-			JSONArray results = data.getJSONArray("top");
-			for (int i = 0; i < results.length(); i+=1) {
-				topIdsString.add(results.getInt(i));
-			}
-		} catch (JSONException e) {
-			
-		}
-		
 		/** Build the URL For Getting Bitts*/
 		String contentUrl = "http://www.infobitt.com/api/bitts?";
 		ByteBuffer content = new ByteBuffer();
-		for (int i = 0; i < topIdsString.size(); i+=1) {
-			contentUrl = contentUrl + "ids=" + topIdsString.get(i) + '&';
+		
+		for (int j = 0; j < categoryByIndex.size(); j+=1) {
+			try {
+				BittCategory category = categoryByIndex.get(j);
+				JSONArray results = data.getJSONArray(category.getSlug());
+				for (int i = 0; i < results.length(); i+=1) {
+					contentUrl = contentUrl + "ids=" + results.getInt(i) + '&';
+				}
+			} catch (JSONException e) {
+				
+			}
 		}
+		
 		contentUrl += "format=json";
 		JSONArray bittsJson = null;
 		
@@ -60,10 +92,18 @@ public class Main {
 		/** Parse Each Individual Bitt */
 		try {
 			//Loop Through Each Bitt
-			for (int i = 0; i<bittsJson.length(); i+=1) {
-				Bitt bitt = new Bitt();
+			for (int i = 0; i < bittsJson.length(); i+=1) {
+				JSONObject jsonData = bittsJson.getJSONObject(i);
+				//Grab the Id
+				int id = jsonData.getInt("id");
+				//Load The Category
+				String slug = jsonData.getJSONArray("categorys").getJSONObject(0).getString("slug");
+				//Match The Category
+				BittCategory category = bittCats.get(slug);
+				//Create Temp Bitt
+				Bitt bitt = new Bitt(id);
 				//Load Each Bitt
-				JSONArray facts = bittsJson.getJSONObject(i).getJSONArray("facts");
+				JSONArray facts = jsonData.getJSONArray("facts");
 				//Get the Headline
 				JSONObject fact = facts.getJSONObject(0);
 				bitt.setHeadline(fact.getString("content"));
@@ -76,11 +116,14 @@ public class Main {
 				//Get The Author
 				JSONObject author = fact.getJSONObject("author");
 				bitt.setAuthorName(author.getString("first_name") + " " + author.getString("last_name"));
-				bitts.add(bitt);
+				category.addBitt(bitt);
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Loaded");
+		
+		long endTime = System.currentTimeMillis();
+		double timeToLoad = (double)((endTime - initTime) / 1000);
+		System.out.println("Loaded in " + timeToLoad);
 	}
 }

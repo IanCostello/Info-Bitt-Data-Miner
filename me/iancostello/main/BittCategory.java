@@ -5,10 +5,14 @@ import java.util.ArrayList;
 public class BittCategory {
 	private String title;
 	private String slug;
-	private ArrayList<Bitt> bitts = new ArrayList<Bitt>();
+	private ArrayList<Bitt> bitts = new ArrayList<>();
 	
 	public BittCategory() {
 		
+	}
+	
+	public int size() {
+		return bitts.size();
 	}
 	
 	public Bitt getBitt(int index) {
