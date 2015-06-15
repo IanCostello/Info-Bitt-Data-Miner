@@ -7,6 +7,7 @@ public class Bitt {
 	private String authorName;
 	private ArrayList<Fact> facts = new ArrayList<>();
 	private int id;
+	private String dateCreated;
 
 	public Bitt(int id) {
 		this.id = id;
@@ -16,6 +17,10 @@ public class Bitt {
 		return headline;
 	}
 
+	public int size() {
+		return facts.size();
+	}
+	
 	public void setHeadline(String headline) {
 		this.headline = headline;
 	}
@@ -42,6 +47,14 @@ public class Bitt {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public String getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(String dateCreated) {
+		this.dateCreated = dateCreated;
 	}
 	
 	

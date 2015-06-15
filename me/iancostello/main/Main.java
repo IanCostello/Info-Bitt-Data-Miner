@@ -107,6 +107,7 @@ public class Main {
 				//Get the Headline
 				JSONObject fact = facts.getJSONObject(0);
 				bitt.setHeadline(fact.getString("content"));
+				bitt.setDateCreated(fact.getString("created"));
 				//Get Other Facts
 				for (int j = 1; j < facts.length(); j+=1) {
 					fact = facts.getJSONObject(j);
@@ -125,5 +126,20 @@ public class Main {
 		long endTime = System.currentTimeMillis();
 		double timeToLoad = (double)((endTime - initTime) / 1000);
 		System.out.println("Loaded in " + timeToLoad);
+		
+		//Print Out Info In Console
+		for (int i=0; i < categoryByIndex.size(); i+=1) {
+			BittCategory cat = categoryByIndex.get(i);
+			//Get Each Bitt
+			for (int j=0; j<cat.size(); j+=1) {
+				Bitt bitt = cat.getBitt(j);
+				System.out.println(bitt.getAuthorName()+ " on " + cat.getTitle() + " said "+ bitt.getHeadline());
+				//Get each fact
+				for (int k=0; k < bitt.size(); k+=1) {
+					Fact fact = bitt.getFact(k);
+					System.out.println('\t' + fact.getAuthor() + " added " + fact.getContent());
+				}
+			}
+		}
 	}
 }
